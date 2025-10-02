@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 interface PasswordOptions {
   length: number;
@@ -22,6 +22,7 @@ const PasswordGenerator: React.FC = () => {
     easyToRead: false,
   });
   const [copied, setCopied] = useState(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const generatePassword = () => {
     let charset = "";
@@ -69,6 +70,23 @@ const PasswordGenerator: React.FC = () => {
     generatePassword();
   }, []); // Generate initial password on mount
 
+  // Auto-regenerate password with debounce when options change
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      generatePassword();
+    }, 200);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [options]); // Re-run when options change
+
   const handleOptionChange = (
     key: keyof PasswordOptions,
     value: boolean | number
@@ -98,20 +116,21 @@ const PasswordGenerator: React.FC = () => {
             <label className="block text-sm font-semibold text-gray-700 mb-3">
               Your New Password
             </label>
-            <div className="relative">
-              <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4 pr-24 min-h-[60px] flex items-center">
-                <span className="text-xl font-mono text-gray-800 break-all">
-                  {password || "Click generate to create password"}
-                </span>
-              </div>
-              <button
-                onClick={copyToClipboard}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-all duration-200 flex items-center gap-2"
-              >
-                {copied ? (
-                  <>
+            <div className="flex gap-2 items-center">
+              <div className="relative bg-gray-50 border-2 border-gray-200 rounded-lg flex-1 min-w-0">
+                <div className="overflow-x-auto overflow-y-hidden p-4 pr-20">
+                  <div className="text-xl font-mono text-gray-800 whitespace-nowrap">
+                    {password || "Click generate to create password"}
+                  </div>
+                </div>
+                <button
+                  onClick={copyToClipboard}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-all duration-200 flex items-center p-2"
+                  title={copied ? "Copied!" : "Copy password"}
+                >
+                  {copied ? (
                     <svg
-                      className="w-5 h-5"
+                      className="w-7 h-7"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -123,12 +142,9 @@ const PasswordGenerator: React.FC = () => {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    Copied!
-                  </>
-                ) : (
-                  <>
+                  ) : (
                     <svg
-                      className="w-5 h-5"
+                      className="w-7 h-7"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -140,9 +156,27 @@ const PasswordGenerator: React.FC = () => {
                         d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                       />
                     </svg>
-                    Copy
-                  </>
-                )}
+                  )}
+                </button>
+              </div>
+              <button
+                onClick={generatePassword}
+                className="text-gray-600 hover:text-gray-800 transition-all duration-200 flex items-center p-2 flex-shrink-0"
+                title="Regenerate password"
+              >
+                <svg
+                  className="w-7 h-7"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
               </button>
             </div>
           </div>
@@ -279,14 +313,6 @@ const PasswordGenerator: React.FC = () => {
               </label>
             </div>
           </div>
-
-          {/* Generate Button */}
-          <button
-            onClick={generatePassword}
-            className="w-full bg-red-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            Generate Password
-          </button>
         </div>
 
         {/* Security Tips */}
