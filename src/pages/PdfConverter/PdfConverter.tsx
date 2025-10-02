@@ -1,19 +1,17 @@
 import React, { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import * as pdfjsLib from "pdfjs-dist";
+import { Document, Packer, Paragraph, TextRun } from "docx";
 
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
 
-type ConversionFormat = "text" | "html" | "json" | "images";
-
 const PdfConverter: React.FC = () => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [selectedFormat, setSelectedFormat] =
-    useState<ConversionFormat>("text");
   const [isConverting, setIsConverting] = useState(false);
-  const [convertedContent, setConvertedContent] = useState<string>("");
+  const [convertedDocx, setConvertedDocx] = useState<Blob | null>(null);
   const [error, setError] = useState<string>("");
+  const [pageCount, setPageCount] = useState<number>(0);
 
   const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -21,7 +19,8 @@ const PdfConverter: React.FC = () => {
       if (file.type === "application/pdf") {
         setPdfFile(file);
         setError("");
-        setConvertedContent("");
+        setConvertedDocx(null);
+        setPageCount(0);
       } else {
         setError("Please upload a valid PDF file");
       }
@@ -41,51 +40,110 @@ const PdfConverter: React.FC = () => {
 
     setIsConverting(true);
     setError("");
-    setConvertedContent("");
+    setConvertedDocx(null);
 
     try {
       const arrayBuffer = await pdfFile.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
-      let result = "";
+      const paragraphs: Paragraph[] = [];
 
-      if (selectedFormat === "text") {
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .map((item: any) => item.str)
-            .join(" ");
-          result += `--- Page ${i} ---\n${pageText}\n\n`;
-        }
-      } else if (selectedFormat === "html") {
-        result = "<html>\n<body>\n";
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .map((item: any) => item.str)
-            .join(" ");
-          result += `<div class="page">\n<h2>Page ${i}</h2>\n<p>${pageText}</p>\n</div>\n`;
-        }
-        result += "</body>\n</html>";
-      } else if (selectedFormat === "json") {
-        const pages = [];
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .map((item: any) => item.str)
-            .join(" ");
-          pages.push({ page: i, text: pageText });
-        }
-        result = JSON.stringify({ pages }, null, 2);
-      } else if (selectedFormat === "images") {
-        result =
-          "Image extraction would require canvas rendering. This is a simplified implementation showing text extraction only.";
+      // Add title
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Converted from PDF",
+              bold: true,
+              size: 32,
+            }),
+          ],
+          spacing: {
+            after: 400,
+          },
+        })
+      );
+
+      // Extract text from each page
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+
+        // Add page header
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Page ${i}`,
+                bold: true,
+                size: 24,
+              }),
+            ],
+            spacing: {
+              before: 200,
+              after: 200,
+            },
+          })
+        );
+
+        // Extract text items and group them
+        const textItems = textContent.items as any[];
+        let currentLine = "";
+
+        textItems.forEach((item, index) => {
+          currentLine += item.str;
+
+          // Check if this is the end of a line (next item has different y position or is last item)
+          const nextItem = textItems[index + 1];
+          if (
+            !nextItem ||
+            Math.abs(nextItem.transform[5] - item.transform[5]) > 2
+          ) {
+            if (currentLine.trim()) {
+              paragraphs.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: currentLine.trim(),
+                    }),
+                  ],
+                  spacing: {
+                    after: 100,
+                  },
+                })
+              );
+            }
+            currentLine = "";
+          } else {
+            currentLine += " ";
+          }
+        });
       }
 
-      setConvertedContent(result);
+      // Create the document
+      const doc = new Document({
+        sections: [
+          {
+            properties: {},
+            children: paragraphs,
+          },
+        ],
+      });
+
+      // Generate the DOCX file
+      const blob = await Packer.toBlob(doc);
+      setConvertedDocx(blob);
+      setPageCount(pdf.numPages);
+
+      // Automatically download the file
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = pdfFile.name.replace(".pdf", ".docx");
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (err) {
       setError("Failed to convert PDF: " + (err as Error).message);
     } finally {
@@ -94,20 +152,12 @@ const PdfConverter: React.FC = () => {
   };
 
   const downloadConverted = () => {
-    if (!convertedContent) return;
+    if (!convertedDocx || !pdfFile) return;
 
-    const extensions: Record<ConversionFormat, string> = {
-      text: "txt",
-      html: "html",
-      json: "json",
-      images: "txt",
-    };
-
-    const blob = new Blob([convertedContent], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(convertedDocx);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `converted.${extensions[selectedFormat]}`;
+    a.download = pdfFile.name.replace(".pdf", ".docx");
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -119,10 +169,10 @@ const PdfConverter: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            PDF Converter
+            PDF to DOCX Converter
           </h1>
           <p className="text-gray-600">
-            Convert your PDF files to various formats
+            Convert your PDF files to Microsoft Word (DOCX) format
           </p>
         </div>
 
@@ -169,30 +219,6 @@ const PdfConverter: React.FC = () => {
             </div>
           )}
 
-          {/* Format Selection */}
-          <div className="mt-8">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Select Output Format
-            </label>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {(["text", "html", "json", "images"] as ConversionFormat[]).map(
-                (format) => (
-                  <button
-                    key={format}
-                    onClick={() => setSelectedFormat(format)}
-                    className={`px-4 py-3 rounded-lg border-2 font-medium transition-all duration-200 ${
-                      selectedFormat === format
-                        ? "border-blue-500 bg-blue-50 text-blue-700"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                    }`}
-                  >
-                    {format.toUpperCase()}
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-
           {/* Convert Button */}
           <div className="mt-8">
             <button
@@ -200,61 +226,125 @@ const PdfConverter: React.FC = () => {
               disabled={!pdfFile || isConverting}
               className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium text-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              {isConverting ? "Converting..." : "Convert PDF"}
+              {isConverting ? (
+                <span className="flex items-center justify-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Converting...
+                </span>
+              ) : (
+                "Convert to DOCX"
+              )}
             </button>
           </div>
 
-          {/* Converted Content Display */}
-          {convertedContent && (
+          {/* Conversion Results */}
+          {convertedDocx && (
             <div className="mt-8">
-              <div className="flex justify-between items-center mb-3">
-                <label className="block text-sm font-medium text-gray-700">
-                  Converted Content
-                </label>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Conversion Complete!
+                </h3>
+                <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Document Ready</p>
+                      <p className="text-lg font-bold text-gray-900 mt-1">
+                        {pdfFile?.name.replace(".pdf", ".docx")}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {pageCount} page{pageCount !== 1 ? "s" : ""} converted
+                      </p>
+                    </div>
+                    <svg
+                      className="w-12 h-12 text-green-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
                 <button
                   onClick={downloadConverted}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-all duration-200"
+                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center"
                 >
-                  Download
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                    />
+                  </svg>
+                  Download DOCX File
                 </button>
-              </div>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-96 overflow-auto">
-                <pre className="text-sm text-gray-800 whitespace-pre-wrap font-mono">
-                  {convertedContent}
-                </pre>
               </div>
             </div>
           )}
         </div>
 
-        {/* Supported Formats Info */}
+        {/* Info Section */}
         <div className="mt-8 bg-white rounded-lg shadow-md p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Supported Conversion Formats
+            About PDF to DOCX Conversion
           </h2>
-          <ul className="space-y-2 text-gray-600">
+          <ul className="space-y-3 text-gray-600">
             <li className="flex items-start">
-              <span className="text-blue-500 mr-2">•</span>
+              <span className="text-blue-500 mr-2 mt-1">✓</span>
               <span>
-                <strong>TEXT:</strong> Extract plain text content from PDF
+                <strong>Text Extraction:</strong> Extracts all text content from
+                your PDF and converts it to an editable Word document.
               </span>
             </li>
             <li className="flex items-start">
-              <span className="text-blue-500 mr-2">•</span>
+              <span className="text-blue-500 mr-2 mt-1">✓</span>
               <span>
-                <strong>HTML:</strong> Convert PDF content to HTML format
+                <strong>Page Preservation:</strong> Maintains page structure
+                with clear page markers in the output document.
               </span>
             </li>
             <li className="flex items-start">
-              <span className="text-blue-500 mr-2">•</span>
+              <span className="text-blue-500 mr-2 mt-1">✓</span>
               <span>
-                <strong>JSON:</strong> Structure PDF content as JSON data
+                <strong>Client-Side Processing:</strong> All conversion happens
+                in your browser. Your files never leave your device.
               </span>
             </li>
             <li className="flex items-start">
-              <span className="text-blue-500 mr-2">•</span>
+              <span className="text-blue-500 mr-2 mt-1">ℹ</span>
               <span>
-                <strong>IMAGES:</strong> Extract images from PDF (simplified)
+                <strong>Note:</strong> Complex formatting, images, and special
+                layouts may require manual adjustment after conversion.
               </span>
             </li>
           </ul>

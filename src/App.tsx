@@ -7,6 +7,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import PdfConverter from "./pages/PdfConverter/PdfConverter";
+import PdfCompressor from "./pages/PdfCompressor/PdfCompressor";
 import PasswordGenerator from "./pages/PasswordGenerator/PasswordGenerator";
 
 const Navigation: React.FC = () => {
@@ -33,6 +34,16 @@ const Navigation: React.FC = () => {
                 }`}
               >
                 PDF Converter
+              </Link>
+              <Link
+                to="/pdf-compressor"
+                className={`inline-flex items-center px-4 py-2 border-b-2 text-sm font-medium transition-colors ${
+                  location.pathname === "/pdf-compressor"
+                    ? "border-green-500 text-green-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                PDF Compressor
               </Link>
               <Link
                 to="/password-generator"
@@ -65,7 +76,7 @@ const HomePage: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
           {/* PDF Converter Card */}
           <Link
             to="/pdf-converter"
@@ -87,14 +98,57 @@ const HomePage: React.FC = () => {
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              PDF Converter
+              PDF to DOCX
             </h2>
             <p className="text-gray-600 mb-4">
-              Convert your PDF files to various formats including text, HTML,
-              JSON, and extract images.
+              Convert your PDF files to Microsoft Word (DOCX) format for easy editing.
             </p>
             <div className="flex items-center text-blue-600 font-medium">
               Start Converting
+              <svg
+                className="w-5 h-5 ml-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+          </Link>
+
+          {/* PDF Compressor Card */}
+          <Link
+            to="/pdf-compressor"
+            className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
+          >
+            <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-xl mb-6">
+              <svg
+                className="w-8 h-8 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              PDF Compressor
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Reduce PDF file size with minimal quality loss. Fast and secure compression.
+            </p>
+            <div className="flex items-center text-green-600 font-medium">
+              Compress PDF
               <svg
                 className="w-5 h-5 ml-2"
                 fill="none"
@@ -248,6 +302,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/pdf-converter" element={<PdfConverter />} />
+          <Route path="/pdf-compressor" element={<PdfCompressor />} />
           <Route path="/password-generator" element={<PasswordGenerator />} />
         </Routes>
       </div>
