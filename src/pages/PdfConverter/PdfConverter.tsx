@@ -3,7 +3,7 @@ import { useDropzone } from "react-dropzone";
 import * as pdfjsLib from "pdfjs-dist";
 
 // Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
 
 type ConversionFormat = "text" | "html" | "json" | "images";
 
