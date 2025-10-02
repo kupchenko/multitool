@@ -117,15 +117,15 @@ const PasswordGenerator: React.FC = () => {
               Your New Password
             </label>
             <div className="flex gap-2 items-center">
-              <div className="relative bg-gray-50 border-2 border-gray-200 rounded-lg flex-1 min-w-0">
-                <div className="overflow-x-auto overflow-y-hidden p-4 pr-20">
+              <div className="relative bg-gray-50 border-2 border-gray-200 rounded-lg flex-1 min-w-0 overflow-hidden">
+                <div className="overflow-x-auto overflow-y-hidden py-4 pl-4 pr-16">
                   <div className="text-xl font-mono text-gray-800 whitespace-nowrap">
                     {password || "Click generate to create password"}
                   </div>
                 </div>
                 <button
                   onClick={copyToClipboard}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-all duration-200 flex items-center p-2"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-all duration-200 flex items-center p-2 bg-gray-50"
                   title={copied ? "Copied!" : "Copy password"}
                 >
                   {copied ? (
@@ -194,7 +194,7 @@ const PasswordGenerator: React.FC = () => {
             <input
               type="range"
               min="8"
-              max="50"
+              max="40"
               value={options.length}
               onChange={(e) =>
                 handleOptionChange("length", parseInt(e.target.value))
@@ -202,15 +202,15 @@ const PasswordGenerator: React.FC = () => {
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-600"
               style={{
                 background: `linear-gradient(to right, #dc2626 0%, #dc2626 ${
-                  ((options.length - 8) / 42) * 100
+                  ((options.length - 8) / 32) * 100
                 }%, #e5e7eb ${
-                  ((options.length - 8) / 42) * 100
+                  ((options.length - 8) / 32) * 100
                 }%, #e5e7eb 100%)`,
               }}
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
               <span>8</span>
-              <span>50</span>
+              <span>40</span>
             </div>
           </div>
 
