@@ -6,12 +6,17 @@ import {
   Link,
   useLocation,
 } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 import PdfConverter from "./pages/PdfConverter/PdfConverter";
 import PdfCompressor from "./pages/PdfCompressor/PdfCompressor";
 import PasswordGenerator from "./pages/PasswordGenerator/PasswordGenerator";
+import SignIn from "./pages/SignIn/SignIn";
+import SignUp from "./pages/SignUp/SignUp";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const Navigation: React.FC = () => {
   const location = useLocation();
+  const { isAuthenticated, logout, user, loginWithRedirect } = useAuth0();
 
   return (
     <nav className="bg-white shadow-lg">
@@ -24,38 +29,84 @@ const Navigation: React.FC = () => {
             >
               🛠️ MultiTool
             </Link>
-            <div className="ml-6 flex space-x-4">
-              <Link
-                to="/pdf-converter"
-                className={`inline-flex items-center px-4 py-2 border-b-2 text-sm font-medium transition-colors ${
-                  location.pathname === "/pdf-converter"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                PDF Converter
-              </Link>
-              <Link
-                to="/pdf-compressor"
-                className={`inline-flex items-center px-4 py-2 border-b-2 text-sm font-medium transition-colors ${
-                  location.pathname === "/pdf-compressor"
-                    ? "border-green-500 text-green-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                PDF Compressor
-              </Link>
-              <Link
-                to="/password-generator"
-                className={`inline-flex items-center px-4 py-2 border-b-2 text-sm font-medium transition-colors ${
-                  location.pathname === "/password-generator"
-                    ? "border-red-500 text-red-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                Password Generator
-              </Link>
-            </div>
+            {isAuthenticated && (
+              <div className="ml-6 flex space-x-4">
+                <Link
+                  to="/pdf-converter"
+                  className={`inline-flex items-center px-4 py-2 border-b-2 text-sm font-medium transition-colors ${
+                    location.pathname === "/pdf-converter"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  PDF Converter
+                </Link>
+                <Link
+                  to="/pdf-compressor"
+                  className={`inline-flex items-center px-4 py-2 border-b-2 text-sm font-medium transition-colors ${
+                    location.pathname === "/pdf-compressor"
+                      ? "border-green-500 text-green-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  PDF Compressor
+                </Link>
+                <Link
+                  to="/password-generator"
+                  className={`inline-flex items-center px-4 py-2 border-b-2 text-sm font-medium transition-colors ${
+                    location.pathname === "/password-generator"
+                      ? "border-red-500 text-red-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  Password Generator
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-4">
+            {isAuthenticated ? (
+              <>
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 text-sm font-medium">
+                      {user?.name?.charAt(0).toUpperCase() || "U"}
+                    </span>
+                  </div>
+                  <span className="text-sm text-gray-700 hidden sm:block">
+                    {user?.name || user?.email}
+                  </span>
+                </div>
+                <button
+                  onClick={() =>
+                    logout({
+                      logoutParams: {
+                        returnTo: window.location.origin,
+                      },
+                    })
+                  }
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => loginWithRedirect()}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Sign In
+                </button>
+                <Link
+                  to="/signup"
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -101,7 +152,8 @@ const HomePage: React.FC = () => {
               PDF to DOCX
             </h2>
             <p className="text-gray-600 mb-4">
-              Convert your PDF files to Microsoft Word (DOCX) format for easy editing.
+              Convert your PDF files to Microsoft Word (DOCX) format for easy
+              editing.
             </p>
             <div className="flex items-center text-blue-600 font-medium">
               Start Converting
@@ -145,7 +197,8 @@ const HomePage: React.FC = () => {
               PDF Compressor
             </h2>
             <p className="text-gray-600 mb-4">
-              Reduce PDF file size with minimal quality loss. Fast and secure compression.
+              Reduce PDF file size with minimal quality loss. Fast and secure
+              compression.
             </p>
             <div className="flex items-center text-green-600 font-medium">
               Compress PDF
@@ -301,9 +354,32 @@ function App() {
         <Navigation />
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/pdf-converter" element={<PdfConverter />} />
-          <Route path="/pdf-compressor" element={<PdfCompressor />} />
-          <Route path="/password-generator" element={<PasswordGenerator />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route
+            path="/pdf-converter"
+            element={
+              <ProtectedRoute>
+                <PdfConverter />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pdf-compressor"
+            element={
+              <ProtectedRoute>
+                <PdfCompressor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/password-generator"
+            element={
+              <ProtectedRoute>
+                <PasswordGenerator />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </div>
     </Router>

@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { PDFDocument } from "pdf-lib";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const PdfCompressor: React.FC = () => {
+  const { getAccessTokenSilently } = useAuth0();
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [compressedPdf, setCompressedPdf] = useState<Blob | null>(null);
   const [error, setError] = useState<string>("");
+  const [compressionLevel, setCompressionLevel] = useState<number>(50);
   const [compressionStats, setCompressionStats] = useState<{
     originalSize: number;
     compressedSize: number;
@@ -51,29 +53,44 @@ const PdfCompressor: React.FC = () => {
     setCompressedPdf(null);
 
     try {
-      const arrayBuffer = await pdfFile.arrayBuffer();
-      const originalSize = arrayBuffer.byteLength;
+      const originalSize = pdfFile.size;
 
-      // Load the PDF
-      const pdfDoc = await PDFDocument.load(arrayBuffer);
-
-      // Get all pages
-      const pages = pdfDoc.getPages();
-
-      // Optimization: Remove duplicate objects and compress
-      // pdf-lib automatically optimizes when saving
-      const compressedPdfBytes = await pdfDoc.save({
-        useObjectStreams: true, // Enable object streams for better compression
-        addDefaultPage: false,
-        objectsPerTick: 50,
+      // Get Auth0 access token (JWT)
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience:
+            process.env.REACT_APP_AUTH0_AUDIENCE || `https://${process.env.REACT_APP_AUTH0_DOMAIN}/api/v2/`,
+          scope: "openid profile email",
+        },
       });
 
-      const compressedSize = compressedPdfBytes.byteLength;
+      // Create form data
+      const formData = new FormData();
+      formData.append("file", pdfFile);
+      formData.append("compressionLevel", compressionLevel.toString());
+
+      // Call backend API
+      const apiUrl =
+        process.env.REACT_APP_BACKEND_API_URL || "http://localhost:8085";
+      const response = await fetch(`${apiUrl}/api/pdf/v2/compress`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to compress PDF: ${response.status} ${response.statusText}. ${errorText}`
+        );
+      }
+
+      // Get the compressed PDF blob
+      const blob = await response.blob();
+      const compressedSize = blob.size;
       const reduction = ((originalSize - compressedSize) / originalSize) * 100;
-
-      const blob = new Blob([compressedPdfBytes], {
-        type: "application/pdf",
-      });
 
       setCompressedPdf(blob);
       setCompressionStats({
@@ -161,6 +178,35 @@ const PdfCompressor: React.FC = () => {
             </div>
           )}
 
+          {/* Compression Level Slider */}
+          {pdfFile && (
+            <div className="mt-6 p-6 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border border-green-200">
+              <label
+                htmlFor="compressionLevel"
+                className="block text-sm font-medium text-gray-900 mb-2"
+              >
+                Compression Level: {compressionLevel}%
+              </label>
+              <div className="flex items-center space-x-4">
+                <span className="text-xs text-gray-600 font-medium">Low</span>
+                <input
+                  type="range"
+                  id="compressionLevel"
+                  min="0"
+                  max="100"
+                  value={compressionLevel}
+                  onChange={(e) => setCompressionLevel(Number(e.target.value))}
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                />
+                <span className="text-xs text-gray-600 font-medium">High</span>
+              </div>
+              <p className="mt-2 text-xs text-gray-600">
+                Higher compression levels reduce file size more but may affect
+                quality
+              </p>
+            </div>
+          )}
+
           {/* Compress Button */}
           <div className="mt-8">
             <button
@@ -221,9 +267,7 @@ const PdfCompressor: React.FC = () => {
                     </p>
                   </div>
                   <div className="bg-white rounded-lg p-4 shadow-sm">
-                    <p className="text-sm text-gray-600 mb-1">
-                      Size Reduction
-                    </p>
+                    <p className="text-sm text-gray-600 mb-1">Size Reduction</p>
                     <p className="text-xl font-bold text-blue-600">
                       {compressionStats.reduction.toFixed(1)}%
                     </p>
@@ -262,29 +306,30 @@ const PdfCompressor: React.FC = () => {
             <li className="flex items-start">
               <span className="text-green-500 mr-2 mt-1">✓</span>
               <span>
-                <strong>Client-Side Processing:</strong> All compression
-                happens in your browser. Your files never leave your device.
+                <strong>Server-Side Processing:</strong> Your PDF is securely
+                processed on our backend server using advanced compression
+                algorithms.
               </span>
             </li>
             <li className="flex items-start">
               <span className="text-green-500 mr-2 mt-1">✓</span>
               <span>
-                <strong>Optimal Compression:</strong> Uses advanced algorithms
-                to reduce file size while maintaining quality.
+                <strong>Adjustable Compression:</strong> Choose your desired
+                compression level (0-100) to balance file size and quality.
               </span>
             </li>
             <li className="flex items-start">
               <span className="text-green-500 mr-2 mt-1">✓</span>
               <span>
-                <strong>Fast & Secure:</strong> No uploads, no waiting, and
-                complete privacy.
+                <strong>Secure & Authenticated:</strong> Your files are
+                protected with JWT authentication via Auth0.
               </span>
             </li>
             <li className="flex items-start">
               <span className="text-green-500 mr-2 mt-1">✓</span>
               <span>
-                <strong>Object Stream Optimization:</strong> Leverages PDF
-                object streams for maximum compression efficiency.
+                <strong>Professional Quality:</strong> Maintains document
+                quality while significantly reducing file size.
               </span>
             </li>
           </ul>
@@ -295,4 +340,3 @@ const PdfCompressor: React.FC = () => {
 };
 
 export default PdfCompressor;
-
