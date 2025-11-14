@@ -83,7 +83,7 @@ const Navigation: React.FC = () => {
                   onClick={() =>
                     logout({
                       logoutParams: {
-                        returnTo: "/",
+                        returnTo: window.location.origin,
                       },
                     })
                   }
