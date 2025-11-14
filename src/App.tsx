@@ -120,7 +120,7 @@ const Navigation: React.FC = () => {
 };
 
 const HomePage: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth0();
+  const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -155,7 +155,7 @@ const HomePage: React.FC = () => {
           <Link
             to="/password-generator"
             className={`bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 ${
-              isAuthenticated ? "flex flex-col" : ""
+              isAuthenticated ? "flex flex-col w-full" : ""
             }`}
           >
             <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-xl mb-6">
@@ -203,18 +203,26 @@ const HomePage: React.FC = () => {
           </Link>
 
           {/* PDF Converter Card */}
-          <div className="relative">
+          <div className={`relative ${isAuthenticated ? "flex" : ""}`}>
             {!isAuthenticated && (
-              <div className="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg z-10">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  loginWithRedirect({
+                    authorizationParams: { screen_hint: "signup" },
+                  });
+                }}
+                className="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg z-10 hover:bg-blue-700 transition-colors cursor-pointer"
+              >
                 Sign up to get access
-              </div>
+              </button>
             )}
             <Link
               to={isAuthenticated ? "/pdf-converter" : "#"}
               onClick={(e) => !isAuthenticated && e.preventDefault()}
               className={`block bg-white rounded-2xl shadow-xl p-8 border border-gray-100 transition-all duration-300 ${
                 isAuthenticated
-                  ? "hover:shadow-2xl transform hover:-translate-y-2 flex flex-col"
+                  ? "hover:shadow-2xl transform hover:-translate-y-2 flex flex-col w-full"
                   : "opacity-60 grayscale blur-[0.5px] cursor-not-allowed"
               }`}
             >
@@ -264,18 +272,26 @@ const HomePage: React.FC = () => {
           </div>
 
           {/* PDF Compressor Card */}
-          <div className="relative">
+          <div className={`relative ${isAuthenticated ? "flex" : ""}`}>
             {!isAuthenticated && (
-              <div className="absolute top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg z-10">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  loginWithRedirect({
+                    authorizationParams: { screen_hint: "signup" },
+                  });
+                }}
+                className="absolute top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg z-10 hover:bg-green-700 transition-colors cursor-pointer"
+              >
                 Sign up to get access
-              </div>
+              </button>
             )}
             <Link
               to={isAuthenticated ? "/pdf-compressor" : "#"}
               onClick={(e) => !isAuthenticated && e.preventDefault()}
               className={`block bg-white rounded-2xl shadow-xl p-8 border border-gray-100 transition-all duration-300 ${
                 isAuthenticated
-                  ? "hover:shadow-2xl transform hover:-translate-y-2 flex flex-col"
+                  ? "hover:shadow-2xl transform hover:-translate-y-2 flex flex-col w-full"
                   : "opacity-60 grayscale blur-[0.5px] cursor-not-allowed"
               }`}
             >
