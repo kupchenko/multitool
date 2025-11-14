@@ -59,7 +59,8 @@ const PdfCompressor: React.FC = () => {
       const token = await getAccessTokenSilently({
         authorizationParams: {
           audience:
-            process.env.REACT_APP_AUTH0_AUDIENCE || `https://${process.env.REACT_APP_AUTH0_DOMAIN}/api/v2/`,
+            process.env.REACT_APP_AUTH0_AUDIENCE ||
+            `https://${process.env.REACT_APP_AUTH0_DOMAIN}/api/v2/`,
           scope: "openid profile email",
         },
       });
@@ -74,6 +75,8 @@ const PdfCompressor: React.FC = () => {
         process.env.REACT_APP_BACKEND_API_URL || "http://localhost:8085";
       const response = await fetch(`${apiUrl}/api/pdf/v2/compress`, {
         method: "POST",
+        credentials: "include",
+        mode: "cors",
         headers: {
           Authorization: `Bearer ${token}`,
         },
