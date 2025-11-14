@@ -11,8 +11,6 @@ import { useAuth0 } from "@auth0/auth0-react";
 import PdfConverter from "./pages/PdfConverter/PdfConverter";
 import PdfCompressor from "./pages/PdfCompressor/PdfCompressor";
 import PasswordGenerator from "./pages/PasswordGenerator/PasswordGenerator";
-import SignIn from "./pages/SignIn/SignIn";
-import SignUp from "./pages/SignUp/SignUp";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const Navigation: React.FC = () => {
@@ -85,7 +83,7 @@ const Navigation: React.FC = () => {
                   onClick={() =>
                     logout({
                       logoutParams: {
-                        returnTo: window.location.origin,
+                        returnTo: "/",
                       },
                     })
                   }
@@ -102,12 +100,6 @@ const Navigation: React.FC = () => {
                 >
                   Sign In
                 </button>
-                <Link
-                  to="/signup"
-                  className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
-                >
-                  Sign Up
-                </Link>
               </>
             )}
           </div>
@@ -132,11 +124,6 @@ const HomePage: React.FC = () => {
     );
   }
 
-  // Redirect to password generator if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/password-generator" replace />;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
@@ -151,94 +138,118 @@ const HomePage: React.FC = () => {
 
         <div className="grid md:grid-cols-3 gap-8">
           {/* PDF Converter Card */}
-          <Link
-            to="/pdf-converter"
-            className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
-          >
-            <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-xl mb-6">
-              <svg
-                className="w-8 h-8 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              PDF to DOCX
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Convert your PDF files to Microsoft Word (DOCX) format for easy
-              editing.
-            </p>
-            <div className="flex items-center text-blue-600 font-medium">
-              Start Converting
-              <svg
-                className="w-5 h-5 ml-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </Link>
+          <div className="relative">
+            {!isAuthenticated && (
+              <div className="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg z-10">
+                Sign up to get access
+              </div>
+            )}
+            <Link
+              to={isAuthenticated ? "/pdf-converter" : "#"}
+              onClick={(e) => !isAuthenticated && e.preventDefault()}
+              className={`block bg-white rounded-2xl shadow-xl p-8 border border-gray-100 transition-all duration-300 ${
+                isAuthenticated
+                  ? "hover:shadow-2xl transform hover:-translate-y-2"
+                  : "opacity-60 grayscale blur-[0.5px] cursor-not-allowed"
+              }`}
+            >
+              <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-xl mb-6">
+                <svg
+                  className="w-8 h-8 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                PDF to DOCX
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Convert your PDF files to Microsoft Word (DOCX) format for easy
+                editing.
+              </p>
+              <div className="flex items-center text-blue-600 font-medium">
+                Start Converting
+                <svg
+                  className="w-5 h-5 ml-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </div>
+            </Link>
+          </div>
 
           {/* PDF Compressor Card */}
-          <Link
-            to="/pdf-compressor"
-            className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
-          >
-            <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-xl mb-6">
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              PDF Compressor
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Reduce PDF file size with minimal quality loss. Fast and secure
-              compression.
-            </p>
-            <div className="flex items-center text-green-600 font-medium">
-              Compress PDF
-              <svg
-                className="w-5 h-5 ml-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </Link>
+          <div className="relative">
+            {!isAuthenticated && (
+              <div className="absolute top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg z-10">
+                Sign up to get access
+              </div>
+            )}
+            <Link
+              to={isAuthenticated ? "/pdf-compressor" : "#"}
+              onClick={(e) => !isAuthenticated && e.preventDefault()}
+              className={`block bg-white rounded-2xl shadow-xl p-8 border border-gray-100 transition-all duration-300 ${
+                isAuthenticated
+                  ? "hover:shadow-2xl transform hover:-translate-y-2"
+                  : "opacity-60 grayscale blur-[0.5px] cursor-not-allowed"
+              }`}
+            >
+              <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-xl mb-6">
+                <svg
+                  className="w-8 h-8 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                PDF Compressor
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Reduce PDF file size with minimal quality loss. Fast and secure
+                compression.
+              </p>
+              <div className="flex items-center text-green-600 font-medium">
+                Compress PDF
+                <svg
+                  className="w-5 h-5 ml-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </div>
+            </Link>
+          </div>
 
           {/* Password Generator Card */}
           <Link
@@ -376,8 +387,6 @@ function App() {
         <Navigation />
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
           <Route
             path="/pdf-converter"
             element={
