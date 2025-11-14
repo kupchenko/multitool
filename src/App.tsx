@@ -83,7 +83,7 @@ const Navigation: React.FC = () => {
                   onClick={() =>
                     logout({
                       logoutParams: {
-                        returnTo: window.location.origin,
+                        returnTo: "/",
                       },
                     })
                   }
@@ -146,11 +146,17 @@ const HomePage: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div
+          className={`grid md:grid-cols-3 gap-8 ${
+            isAuthenticated ? "md:items-stretch" : ""
+          }`}
+        >
           {/* Password Generator Card - Always active, shown first */}
           <Link
             to="/password-generator"
-            className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
+            className={`bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 ${
+              isAuthenticated ? "flex flex-col" : ""
+            }`}
           >
             <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-xl mb-6">
               <svg
@@ -170,7 +176,11 @@ const HomePage: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-3">
               Password Generator
             </h2>
-            <p className="text-gray-600 mb-4">
+            <p
+              className={`text-gray-600 mb-4 ${
+                isAuthenticated ? "flex-grow" : ""
+              }`}
+            >
               Generate strong, secure passwords with customizable options. Keep
               your accounts safe with unique passwords.
             </p>
@@ -204,7 +214,7 @@ const HomePage: React.FC = () => {
               onClick={(e) => !isAuthenticated && e.preventDefault()}
               className={`block bg-white rounded-2xl shadow-xl p-8 border border-gray-100 transition-all duration-300 ${
                 isAuthenticated
-                  ? "hover:shadow-2xl transform hover:-translate-y-2"
+                  ? "hover:shadow-2xl transform hover:-translate-y-2 flex flex-col"
                   : "opacity-60 grayscale blur-[0.5px] cursor-not-allowed"
               }`}
             >
@@ -226,7 +236,11 @@ const HomePage: React.FC = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-3">
                 PDF to DOCX
               </h2>
-              <p className="text-gray-600 mb-4">
+              <p
+                className={`text-gray-600 mb-4 ${
+                  isAuthenticated ? "flex-grow" : ""
+                }`}
+              >
                 Convert your PDF files to Microsoft Word (DOCX) format for easy
                 editing.
               </p>
@@ -261,7 +275,7 @@ const HomePage: React.FC = () => {
               onClick={(e) => !isAuthenticated && e.preventDefault()}
               className={`block bg-white rounded-2xl shadow-xl p-8 border border-gray-100 transition-all duration-300 ${
                 isAuthenticated
-                  ? "hover:shadow-2xl transform hover:-translate-y-2"
+                  ? "hover:shadow-2xl transform hover:-translate-y-2 flex flex-col"
                   : "opacity-60 grayscale blur-[0.5px] cursor-not-allowed"
               }`}
             >
@@ -283,7 +297,11 @@ const HomePage: React.FC = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-3">
                 PDF Compressor
               </h2>
-              <p className="text-gray-600 mb-4">
+              <p
+                className={`text-gray-600 mb-4 ${
+                  isAuthenticated ? "flex-grow" : ""
+                }`}
+              >
                 Reduce PDF file size with minimal quality loss. Fast and secure
                 compression.
               </p>
