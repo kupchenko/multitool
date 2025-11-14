@@ -76,7 +76,7 @@ const PdfCompressor: React.FC = () => {
       const response = await fetch(`${apiUrl}/api/pdf/v2/compress`, {
         method: "POST",
         credentials: "include",
-        mode: "cors",
+        mode: "no-cors",
         headers: {
           Authorization: `Bearer ${token}`,
         },
