@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useAuth0 } from "@auth0/auth0-react";
+import { MultiToolApi } from "../../multitool.api";
+import { AUTH0_TOKEN_CONFIG } from "../../utils/auth.utils";
 
 const PdfCompressor: React.FC = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -53,54 +55,28 @@ const PdfCompressor: React.FC = () => {
     setCompressedPdf(null);
 
     try {
-      const originalSize = pdfFile.size;
-
       // Get Auth0 access token (JWT)
-      const token = await getAccessTokenSilently({
-        authorizationParams: {
-          audience:
-            process.env.REACT_APP_AUTH0_AUDIENCE ||
-            `https://${process.env.REACT_APP_AUTH0_DOMAIN}/api/v2/`,
-          scope: "openid profile email",
-        },
+      const token = await getAccessTokenSilently(AUTH0_TOKEN_CONFIG);
+
+      // Call API using centralized API client
+      const result = await MultiToolApi.pdf.compress({
+        file: pdfFile,
+        compressionLevel,
+        token,
       });
 
-      // Create form data
-      const formData = new FormData();
-      formData.append("file", pdfFile);
-      formData.append("compressionLevel", compressionLevel.toString());
+      const reduction =
+        ((result.originalSize - result.compressedSize) / result.originalSize) *
+        100;
 
-      // Call backend API
-      const apiUrl =
-        process.env.REACT_APP_BACKEND_API_URL || "http://localhost:8085";
-      const response = await fetch(`${apiUrl}/api/pdf/v2/compress`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to compress PDF: ${response.status} ${response.statusText}. ${errorText}`
-        );
-      }
-
-      // Get the compressed PDF blob
-      const blob = await response.blob();
-      const compressedSize = blob.size;
-      const reduction = ((originalSize - compressedSize) / originalSize) * 100;
-
-      setCompressedPdf(blob);
+      setCompressedPdf(result.blob);
       setCompressionStats({
-        originalSize,
-        compressedSize,
+        originalSize: result.originalSize,
+        compressedSize: result.compressedSize,
         reduction: Math.max(0, reduction), // Ensure non-negative
       });
-    } catch (err) {
-      setError("Failed to compress PDF: " + (err as Error).message);
+    } catch (err: any) {
+      setError(err.message || "Failed to compress PDF: " + String(err));
     } finally {
       setIsCompressing(false);
     }

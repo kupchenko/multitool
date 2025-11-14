@@ -68,7 +68,7 @@ const PasswordGenerator: React.FC = () => {
 
   useEffect(() => {
     generatePassword();
-  }, [generatePassword]); // Generate initial password on mount
+  }, []); // Generate initial password on mount
 
   // Auto-regenerate password with debounce when options change
   useEffect(() => {
@@ -85,7 +85,7 @@ const PasswordGenerator: React.FC = () => {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [options, generatePassword]); // Re-run when options change
+  }, [options]); // Re-run when options change
 
   const handleOptionChange = (
     key: keyof PasswordOptions,

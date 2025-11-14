@@ -6,5 +6,10 @@ export const auth0Config = {
     audience: process.env.REACT_APP_AUTH0_AUDIENCE || `https://${process.env.REACT_APP_AUTH0_DOMAIN}/api/v2/`,
     scope: 'openid profile email',
   },
+  // Use localStorage to persist auth state across page refreshes (F5)
+  // This prevents users from being logged out on hard refresh
+  cacheLocation: 'localstorage' as const,
+  // Use refresh tokens for better session management
+  useRefreshTokens: true,
 };
 

@@ -5,6 +5,7 @@ import {
   Route,
   Link,
   useLocation,
+  Navigate,
 } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import PdfConverter from "./pages/PdfConverter/PdfConverter";
@@ -29,40 +30,42 @@ const Navigation: React.FC = () => {
             >
               🛠️ MultiTool
             </Link>
-            {isAuthenticated && (
-              <div className="ml-6 flex space-x-4">
-                <Link
-                  to="/pdf-converter"
-                  className={`inline-flex items-center px-4 py-2 border-b-2 text-sm font-medium transition-colors ${
-                    location.pathname === "/pdf-converter"
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  PDF Converter
-                </Link>
-                <Link
-                  to="/pdf-compressor"
-                  className={`inline-flex items-center px-4 py-2 border-b-2 text-sm font-medium transition-colors ${
-                    location.pathname === "/pdf-compressor"
-                      ? "border-green-500 text-green-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  PDF Compressor
-                </Link>
-                <Link
-                  to="/password-generator"
-                  className={`inline-flex items-center px-4 py-2 border-b-2 text-sm font-medium transition-colors ${
-                    location.pathname === "/password-generator"
-                      ? "border-red-500 text-red-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  Password Generator
-                </Link>
-              </div>
-            )}
+            <div className="ml-6 flex space-x-4">
+              {isAuthenticated && (
+                <>
+                  <Link
+                    to="/pdf-converter"
+                    className={`inline-flex items-center px-4 py-2 border-b-2 text-sm font-medium transition-colors ${
+                      location.pathname === "/pdf-converter"
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    PDF Converter
+                  </Link>
+                  <Link
+                    to="/pdf-compressor"
+                    className={`inline-flex items-center px-4 py-2 border-b-2 text-sm font-medium transition-colors ${
+                      location.pathname === "/pdf-compressor"
+                        ? "border-green-500 text-green-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    PDF Compressor
+                  </Link>
+                </>
+              )}
+              <Link
+                to="/password-generator"
+                className={`inline-flex items-center px-4 py-2 border-b-2 text-sm font-medium transition-colors ${
+                  location.pathname === "/password-generator"
+                    ? "border-red-500 text-red-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                Password Generator
+              </Link>
+            </div>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -115,6 +118,25 @@ const Navigation: React.FC = () => {
 };
 
 const HomePage: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuth0();
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to password generator if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/password-generator" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
@@ -372,14 +394,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/password-generator"
-            element={
-              <ProtectedRoute>
-                <PasswordGenerator />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/password-generator" element={<PasswordGenerator />} />
         </Routes>
       </div>
     </Router>
