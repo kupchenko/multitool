@@ -68,6 +68,7 @@ const PasswordGenerator: React.FC = () => {
 
   useEffect(() => {
     generatePassword();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Generate initial password on mount
 
   // Auto-regenerate password with debounce when options change
@@ -85,6 +86,7 @@ const PasswordGenerator: React.FC = () => {
         clearTimeout(debounceTimerRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [options]); // Re-run when options change
 
   const handleOptionChange = (
