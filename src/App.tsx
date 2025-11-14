@@ -83,7 +83,7 @@ const Navigation: React.FC = () => {
                   onClick={() =>
                     logout({
                       logoutParams: {
-                        returnTo: "/",
+                        returnTo: window.location.origin,
                       },
                     })
                   }
@@ -99,6 +99,16 @@ const Navigation: React.FC = () => {
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
                   Sign In
+                </button>
+                <button
+                  onClick={() =>
+                    loginWithRedirect({
+                      authorizationParams: { screen_hint: "signup" },
+                    })
+                  }
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                >
+                  Sign Up
                 </button>
               </>
             )}
@@ -137,6 +147,51 @@ const HomePage: React.FC = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
+          {/* Password Generator Card - Always active, shown first */}
+          <Link
+            to="/password-generator"
+            className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
+          >
+            <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-xl mb-6">
+              <svg
+                className="w-8 h-8 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              Password Generator
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Generate strong, secure passwords with customizable options. Keep
+              your accounts safe with unique passwords.
+            </p>
+            <div className="flex items-center text-red-600 font-medium">
+              Generate Password
+              <svg
+                className="w-5 h-5 ml-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+          </Link>
+
           {/* PDF Converter Card */}
           <div className="relative">
             {!isAuthenticated && (
@@ -250,51 +305,6 @@ const HomePage: React.FC = () => {
               </div>
             </Link>
           </div>
-
-          {/* Password Generator Card */}
-          <Link
-            to="/password-generator"
-            className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
-          >
-            <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-xl mb-6">
-              <svg
-                className="w-8 h-8 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              Password Generator
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Generate strong, secure passwords with customizable options. Keep
-              your accounts safe with unique passwords.
-            </p>
-            <div className="flex items-center text-red-600 font-medium">
-              Generate Password
-              <svg
-                className="w-5 h-5 ml-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </Link>
         </div>
 
         {/* Features Section */}
